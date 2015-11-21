@@ -2,15 +2,47 @@ defmodule WorkerPoolTest do
   use ExUnit.Case
   doctest WorkerPool
 
+  ##########################################################################################################
+  # Macros.
+  ##########################################################################################################
+
+  # Returns position in the file.
+  defmacro where_am_i do
+    quote do
+      "#{__ENV__.file}_#{__ENV__.line}"
+    end
+  end
+
+  # Generates a pool name.
+  defmacro make_pool_name do
+    quote do
+      "pool_#{where_am_i}" |> String.to_atom
+    end
+  end
+
+  defmacro spit(text) do
+    quote do
+      IO.ANSI.format([:red, "#{where_am_i |> Path.basename} -> '", unquote(text), "'"]) |> IO.puts
+    end
+  end
+
+  ##########################################################################################################
+  # Tests.
+  ##########################################################################################################
+
+  setup do
+    :ok
+  end
+
   test "The pool starts" do
-    pool = :pool1
+    pool = make_pool_name()
     assert {:ok, _pid} = WorkerPool.start(pool)
     assert true == pool in Process.registered
     assert 0 == WorkerPool.current_processes(pool)
   end
 
   test "Runs a job which ends normally" do
-    pool = :pool2
+    pool = make_pool_name()
     WorkerPool.start(pool)
 
     me = self
@@ -30,7 +62,7 @@ defmodule WorkerPoolTest do
   end
 
   test "Runs a job which ends with error" do
-    pool = :pool3
+    pool = make_pool_name()
     WorkerPool.start(pool)
 
     me = self
@@ -50,7 +82,7 @@ defmodule WorkerPoolTest do
   end
 
   test "One job is ok the other on is error" do
-    pool = :pool4
+    pool = make_pool_name()
     WorkerPool.start(pool)
 
     me = self
@@ -79,7 +111,7 @@ defmodule WorkerPoolTest do
   end
 
   test "Run out of processes" do
-    pool = :pool5
+    pool = make_pool_name()
     WorkerPool.start(pool, 2)
 
     me = self()
@@ -96,14 +128,16 @@ defmodule WorkerPoolTest do
   end
 
   test "Run one thousend processes" do
-    pool = :pool6
+    pool = make_pool_name()
     WorkerPool.start(pool, 2000)
 
     me = self()
 
     for i <- 1..1_000 do
-      WorkerPool.run pool, fn -> do_ok_job() end, if_ok: fn -> send me, i end
+      WorkerPool.run pool, fn -> do_ok_job(2_000) end, if_ok: fn -> send me, i end
     end
+
+    assert 1_000 == WorkerPool.current_processes(pool)
 
     for i <- 1..1_000 do
       assert_receive ^i, 2_000
@@ -115,13 +149,13 @@ defmodule WorkerPoolTest do
   ##########################################################################################################
 
   # OK job.
-  defp do_ok_job do
-    :timer.sleep 200
+  defp do_ok_job(time \\ 200) do
+    :timer.sleep time
   end
 
   # Broken job.
-  defp do_broken_job do
-    :timer.sleep 200
+  defp do_broken_job(time \\ 200) do
+    :timer.sleep time
     raise "wanted error"
   end
 end
