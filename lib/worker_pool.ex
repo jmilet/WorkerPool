@@ -1,7 +1,7 @@
 import QueueData
 
 defmodule PoolState do
-  defstruct max_processes: 0, current_processes: 0, error_handlers: %{}
+  defstruct max_processes: 0, current_processes: 0, handlers: %{}
 end
 
 defmodule WorkerPool do
@@ -55,9 +55,9 @@ defmodule WorkerPool do
       end
 
       # Add the new process and increase the counter.
-      error_handlers = Dict.put(state.error_handlers, pid, opts)
+      handlers = Dict.put(state.handlers, pid, opts)
       current_processes = state.current_processes + 1
-      {:reply, :ok,  %PoolState{state| error_handlers: error_handlers, current_processes: current_processes}}
+      {:reply, :ok,  %PoolState{state| handlers: handlers, current_processes: current_processes}}
     end
   end
 
@@ -75,7 +75,7 @@ defmodule WorkerPool do
   defp handle_down(pid, ref, reason, state) do
     # Looks the process up.
     key = {pid, ref}
-    opts = Dict.get(state.error_handlers, key)
+    opts = Dict.get(state.handlers, key)
 
     # Runs the ok callback.
     if opts != nil do
@@ -86,9 +86,9 @@ defmodule WorkerPool do
     end
 
     # Remove the process and decrease the counter.
-    error_handlers = state.error_handlers |> Dict.delete(key)
+    handlers = state.handlers |> Dict.delete(key)
     current_processes = state.current_processes - 1
 
-    %PoolState{state| error_handlers: error_handlers, current_processes: current_processes}
+    %PoolState{state| handlers: handlers, current_processes: current_processes}
   end
 end
