@@ -82,9 +82,17 @@ defmodule WorkerPoolTest do
     pool = :pool5
     WorkerPool.start(pool, 2)
 
-    assert :ok == WorkerPool.run pool, fn -> do_ok_job() end
-    assert :ok == WorkerPool.run pool, fn -> do_ok_job() end
+    me = self()
+
+    assert :ok == WorkerPool.run pool, fn -> do_ok_job() end, if_ok: fn -> send me, :ok1 end
+    assert :ok == WorkerPool.run pool, fn -> do_ok_job() end, if_ok: fn -> send me, :ok2 end
     assert :error == WorkerPool.run pool, fn -> do_ok_job() end
+
+    assert_receive :ok1, 2_000
+    assert_receive :ok2, 2_000
+
+    assert :ok == WorkerPool.run pool, fn -> do_ok_job() end, if_ok: fn -> send me, :ok3 end
+    assert_receive :ok3, 2_000
   end
 
   ##########################################################################################################
