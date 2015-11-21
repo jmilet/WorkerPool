@@ -127,7 +127,7 @@ defmodule WorkerPoolTest do
     assert_receive :ok3, 2_000
   end
 
-  test "Run one thousend processes" do
+  test "Runs 1000 processes" do
     pool = make_pool_name()
     WorkerPool.start(pool, 2000)
 
@@ -144,6 +144,23 @@ defmodule WorkerPoolTest do
     end
   end
 
+  test "Runs 2001 process and exceeds the pool size by one " do
+    pool = make_pool_name()
+    WorkerPool.start(pool, 2_000)
+
+    me = self()
+
+    ret = (for i <- 1..2_001, do: (WorkerPool.run pool, fn -> :timer.sleep 2_000; send me, i end))
+    assert [:error] == ret |> Enum.filter &(&1 == :error)
+    assert 2_000 == (ret |> Enum.filter &(&1 == :ok)) |> length
+
+    ret = for _ <- 1..2_000 do
+      receive do: (ret -> ret)
+    end
+    assert 2001000 == ret |> Enum.reduce(0, &(&1 + &2))
+
+  end
+
   ##########################################################################################################
   # Private.
   ##########################################################################################################
@@ -156,6 +173,6 @@ defmodule WorkerPoolTest do
   # Broken job.
   defp do_broken_job(time \\ 200) do
     :timer.sleep time
-    raise "wanted error"
+    raise "caused error"
   end
 end
