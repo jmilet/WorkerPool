@@ -86,6 +86,6 @@ defmodule WorkerPoolTest do
   # Broken job.
   defp do_broken_job do
     :timer.sleep 200
-    1/0
+    raise "wanted error"
   end
 end
