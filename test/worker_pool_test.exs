@@ -95,6 +95,21 @@ defmodule WorkerPoolTest do
     assert_receive :ok3, 2_000
   end
 
+  test "Run one thousend processes" do
+    pool = :pool6
+    WorkerPool.start(pool, 2000)
+
+    me = self()
+
+    for i <- 1..1_000 do
+      WorkerPool.run pool, fn -> do_ok_job() end, if_ok: fn -> send me, i end
+    end
+
+    for i <- 1..1_000 do
+      assert_receive ^i, 2_000
+    end
+  end
+
   ##########################################################################################################
   # Private.
   ##########################################################################################################
