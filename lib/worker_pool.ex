@@ -47,14 +47,18 @@ defmodule WorkerPool do
   end
 
   def handle_call({:run, code, opts}, _from, state) do
-    pid = spawn_monitor fn ->
-      code.()
-    end
+    if state.current_processes == state.max_processes do
+      {:reply, :error, state}
+    else
+      pid = spawn_monitor fn ->
+        code.()
+      end
 
-    # Add the new process and increase the counter.
-    error_handlers = Dict.put(state.error_handlers, pid, opts)
-    current_processes = state.current_processes + 1
-    {:reply, :ok,  %PoolState{state| error_handlers: error_handlers, current_processes: current_processes}}
+      # Add the new process and increase the counter.
+      error_handlers = Dict.put(state.error_handlers, pid, opts)
+      current_processes = state.current_processes + 1
+      {:reply, :ok,  %PoolState{state| error_handlers: error_handlers, current_processes: current_processes}}
+    end
   end
 
   # Handle correct termination.

@@ -78,6 +78,19 @@ defmodule WorkerPoolTest do
     assert 0 == WorkerPool.current_processes(pool)
   end
 
+  test "Run out of processes" do
+    pool = :pool5
+    WorkerPool.start(pool, 2)
+
+    assert :ok == WorkerPool.run pool, fn -> do_ok_job() end
+    assert :ok == WorkerPool.run pool, fn -> do_ok_job() end
+    assert :error == WorkerPool.run pool, fn -> do_ok_job() end
+  end
+
+  ##########################################################################################################
+  # Private.
+  ##########################################################################################################
+
   # OK job.
   defp do_ok_job do
     :timer.sleep 200
