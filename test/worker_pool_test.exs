@@ -23,6 +23,7 @@ defmodule WorkerPoolTest do
       send me, :ok_job
     end
 
+    # Checks callback exection and counter.
     assert 1 == WorkerPool.current_processes(pool)
     assert_receive :ok_job, 2_000
     assert 0 == WorkerPool.current_processes(pool)
@@ -42,6 +43,7 @@ defmodule WorkerPoolTest do
       send me, :ok_job
     end
 
+    # Checks callback exection and counter.
     assert 1 == WorkerPool.current_processes(pool)
     assert_receive {:error_job, _reason}, 2_000
     assert 0 == WorkerPool.current_processes(pool)
@@ -69,16 +71,19 @@ defmodule WorkerPoolTest do
       send me, :ok_job_2
     end
 
+    # Checks callback exection and counter.
     assert 2 == WorkerPool.current_processes(pool)
     assert_receive :ok_job_1, 2_000
     assert_receive {:error_job_2, _reason}, 2_000
     assert 0 == WorkerPool.current_processes(pool)
   end
 
+  # OK job.
   defp do_ok_job do
     :timer.sleep 200
   end
 
+  # Broken job.
   defp do_broken_job do
     :timer.sleep 200
     1/0
