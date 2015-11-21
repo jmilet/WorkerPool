@@ -159,6 +159,7 @@ defmodule WorkerPoolTest do
     end
     assert 2001000 == ret |> Enum.reduce(0, &(&1 + &2))
 
+    assert :ok == WorkerPool.run pool, fn -> 1 end
   end
 
   ##########################################################################################################
