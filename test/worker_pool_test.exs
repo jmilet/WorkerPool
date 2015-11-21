@@ -6,7 +6,6 @@ defmodule WorkerPoolTest do
     pool = :pool1
     assert {:ok, _pid} = WorkerPool.start(pool)
     assert true == pool in Process.registered
-
     assert 0 == WorkerPool.current_processes(pool)
   end
 
@@ -17,8 +16,7 @@ defmodule WorkerPoolTest do
     me = self
 
     WorkerPool.run pool, fn ->
-      :timer.sleep 200
-      1
+      do_ok_job()
     end, if_error: fn ->
       send me, :error_job
     end, if_ok: fn ->
@@ -37,8 +35,7 @@ defmodule WorkerPoolTest do
     me = self
 
     WorkerPool.run pool, fn ->
-      :timer.sleep 200
-      1 / 0
+      do_broken_job()
     end, if_error: fn(reason) ->
       send me, {:error_job, reason}
     end, if_ok: fn ->
@@ -57,8 +54,7 @@ defmodule WorkerPoolTest do
     me = self
 
     WorkerPool.run pool, fn ->
-      :timer.sleep 200
-      1
+      do_ok_job()
     end, if_error: fn(reason) ->
       send me, {:error_job_1, reason}
     end, if_ok: fn ->
@@ -66,8 +62,7 @@ defmodule WorkerPoolTest do
     end
 
     WorkerPool.run pool, fn ->
-      :timer.sleep 200
-      1 / 0
+      do_broken_job()
     end, if_error: fn(reason) ->
       send me, {:error_job_2, reason}
     end, if_ok: fn ->
@@ -78,5 +73,14 @@ defmodule WorkerPoolTest do
     assert_receive :ok_job_1, 2_000
     assert_receive {:error_job_2, _reason}, 2_000
     assert 0 == WorkerPool.current_processes(pool)
+  end
+
+  defp do_ok_job do
+    :timer.sleep 200
+  end
+
+  defp do_broken_job do
+    :timer.sleep 200
+    1/0
   end
 end
