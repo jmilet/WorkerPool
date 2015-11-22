@@ -162,6 +162,16 @@ defmodule WorkerPoolTest do
     assert :ok == WorkerPool.run pool, fn -> 1 end
   end
 
+  test "The process timesout" do
+    pool = make_pool_name()
+    WorkerPool.start(pool, 10)
+
+    me = self()
+
+    WorkerPool.run pool, fn -> :timer.sleep(3_000) end, timeout: 100, if_timeout: fn -> send me, :job_timeout end
+    assert_receive :job_timeout, 2_000
+  end
+
   ##########################################################################################################
   # Private.
   ##########################################################################################################

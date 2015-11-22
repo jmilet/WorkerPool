@@ -50,7 +50,20 @@ defmodule WorkerPool do
     if state.current_processes == state.max_processes do
       {:reply, :error, state}
     else
+
+      # Spawns the monitored process.
       pid = spawn_monitor fn ->
+        monitored = self()
+
+        # If timeout is given we link a timer to the monitored process.
+        if opts[:timeout] do
+          spawn_link fn ->
+            :timer.sleep opts[:timeout]
+            Process.exit(monitored, :timeout)
+          end
+        end
+
+        # Run the actual code.
         code.()
       end
 
@@ -81,6 +94,7 @@ defmodule WorkerPool do
     if opts != nil do
       case reason do
         :normal -> if opts[:if_ok], do: opts[:if_ok].()
+        :timeout -> if opts[:if_timeout], do: opts[:if_timeout].()
         error -> if opts[:if_error], do: opts[:if_error].(error)
       end
     end
