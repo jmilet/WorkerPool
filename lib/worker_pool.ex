@@ -1,5 +1,3 @@
-import QueueData
-
 defmodule PoolState do
   defstruct max_processes: 0, current_processes: 0, handlers: %{}
 end

@@ -27,6 +27,6 @@ defmodule WorkerPool.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:queue_data_type, path: "/Users/juanmi/projects/queue_data_type"}]
+    []
   end
 end
