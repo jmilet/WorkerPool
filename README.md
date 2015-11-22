@@ -3,17 +3,30 @@
 WorkerPool is a naive pool implementation. It's intended to
 be just a prove of concept.
 
-It's a simple pool which executes the code is given in the `run`
-function provided the maximum number of processes isn't reached. In such a case, an `:error` would be returned.
+It's a minimal pool which limits the maximum number of processes
+that can be executed concurrently. Optionally, it also limits the time a
+given process has to complete.
 
-Be aware that workers aren't pre-started. The
-pool just guarantees that the maximum load is under control.
+When a new job on
+a full pool is started, an `:error` atom is returned. In such a case, the starter process will have
+to wait and try again.
 
-Important optionals params:
+Be aware that workers aren't pre-started. The pool just guarantees
+some limits on system load.
 
-1. The `start` function can specify the max number of processes.
-2. Callbacks `on_ok`, `on_error` and `on_timeout` can be given in order to be called whenever these events occur.
+In order to manage the different types of termination three optional
+callbacks can be passed:
 
+1. `on_ok` If present, called when the job correctly completes.
+2. `on_error` If present, called when the job fails.
+3. `on_time` If present, and `timeout` has been given, called when
+the process hasn't finished on time.
+
+The process associations are:
+
+```
+[caller] ---> [pool] ---monitor---> [job] <---link---> [timeout process]
+```
 
 This is a classic usage:
 
@@ -22,7 +35,7 @@ WorkerPool.start(:pool)
 
 me = self
 
-WorkerPool.run :pool, fn ->
+:ok = WorkerPool.run :pool, fn ->
   do_job()
 end, on_ok: fn ->
   send me, :ok_job
