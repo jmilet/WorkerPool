@@ -24,6 +24,17 @@ defmodule WorkerPool do
 
   @doc """
   Run a process.
+
+  Optional params:
+
+  * `timeout` ms to timeout the process.
+  * `on_ok` callback for correct termination.
+  * `on_error` callback for non correct termination.
+  * `on_timeout` callback for timeout termination.
+
+  It returns:
+
+  :ok | :error (if the pool is full).
   """
   def run(pool, code, opts \\ []) do
     GenServer.call(pool, {:run, code, opts})
