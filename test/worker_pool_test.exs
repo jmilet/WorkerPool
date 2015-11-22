@@ -1,30 +1,8 @@
+require WorkerPool.Helper, as: H
+
 defmodule WorkerPoolTest do
   use ExUnit.Case
   doctest WorkerPool
-
-  ##########################################################################################################
-  # Macros.
-  ##########################################################################################################
-
-  # Returns position in the file.
-  defmacro where_am_i do
-    quote do
-      "#{__ENV__.file}_#{__ENV__.line}"
-    end
-  end
-
-  # Generates a pool name.
-  defmacro make_pool_name do
-    quote do
-      "pool_#{where_am_i}" |> String.to_atom
-    end
-  end
-
-  defmacro spit(text) do
-    quote do
-      IO.ANSI.format([:red, "#{where_am_i |> Path.basename} -> '", unquote(text), "'"]) |> IO.puts
-    end
-  end
 
   ##########################################################################################################
   # Tests.
@@ -35,14 +13,14 @@ defmodule WorkerPoolTest do
   end
 
   test "The pool starts" do
-    pool = make_pool_name()
+    pool = H.make_pool_name()
     assert {:ok, _pid} = WorkerPool.start(pool)
     assert true == pool in Process.registered
     assert 0 == WorkerPool.current_processes(pool)
   end
 
   test "Runs a job which ends normally" do
-    pool = make_pool_name()
+    pool = H.make_pool_name()
     WorkerPool.start(pool)
 
     me = self
@@ -62,7 +40,7 @@ defmodule WorkerPoolTest do
   end
 
   test "Runs a job which ends with error" do
-    pool = make_pool_name()
+    pool = H.make_pool_name()
     WorkerPool.start(pool)
 
     me = self
@@ -82,7 +60,7 @@ defmodule WorkerPoolTest do
   end
 
   test "One job is ok the other on is error" do
-    pool = make_pool_name()
+    pool = H.make_pool_name()
     WorkerPool.start(pool)
 
     me = self
@@ -111,7 +89,7 @@ defmodule WorkerPoolTest do
   end
 
   test "Run out of processes" do
-    pool = make_pool_name()
+    pool = H.make_pool_name()
     WorkerPool.start(pool, 2)
 
     me = self()
@@ -128,7 +106,7 @@ defmodule WorkerPoolTest do
   end
 
   test "Runs 1000 processes" do
-    pool = make_pool_name()
+    pool = H.make_pool_name()
     WorkerPool.start(pool, 2000)
 
     me = self()
@@ -145,7 +123,7 @@ defmodule WorkerPoolTest do
   end
 
   test "Runs 2001 process and exceeds the pool size by one " do
-    pool = make_pool_name()
+    pool = H.make_pool_name()
     WorkerPool.start(pool, 2_000)
 
     me = self()
@@ -163,7 +141,7 @@ defmodule WorkerPoolTest do
   end
 
   test "The process timesout" do
-    pool = make_pool_name()
+    pool = H.make_pool_name()
     WorkerPool.start(pool, 10)
 
     me = self()
