@@ -19,7 +19,7 @@ callbacks can be passed:
 
 1. `on_ok` If present, called when the job correctly completes.
 2. `on_error` If present, called when the job fails.
-3. `on_time` If present, and `timeout` has been given, called when
+3. `on_timeout` If present, and `timeout` has been given, called when
 the process hasn't finished on time.
 
 The process associations are:
