@@ -49,9 +49,9 @@ defmodule WorkerPoolTest do
 
     WorkerPool.run pool, fn ->
       do_ok_job()
-    end, if_error: fn ->
+    end, on_error: fn ->
       send me, :error_job
-    end, if_ok: fn ->
+    end, on_ok: fn ->
       send me, :ok_job
     end
 
@@ -69,9 +69,9 @@ defmodule WorkerPoolTest do
 
     WorkerPool.run pool, fn ->
       do_broken_job()
-    end, if_error: fn(reason) ->
+    end, on_error: fn(reason) ->
       send me, {:error_job, reason}
-    end, if_ok: fn ->
+    end, on_ok: fn ->
       send me, :ok_job
     end
 
@@ -89,17 +89,17 @@ defmodule WorkerPoolTest do
 
     WorkerPool.run pool, fn ->
       do_ok_job()
-    end, if_error: fn(reason) ->
+    end, on_error: fn(reason) ->
       send me, {:error_job_1, reason}
-    end, if_ok: fn ->
+    end, on_ok: fn ->
       send me, :ok_job_1
     end
 
     WorkerPool.run pool, fn ->
       do_broken_job()
-    end, if_error: fn(reason) ->
+    end, on_error: fn(reason) ->
       send me, {:error_job_2, reason}
-    end, if_ok: fn ->
+    end, on_ok: fn ->
       send me, :ok_job_2
     end
 
@@ -116,14 +116,14 @@ defmodule WorkerPoolTest do
 
     me = self()
 
-    assert :ok == WorkerPool.run pool, fn -> do_ok_job() end, if_ok: fn -> send me, :ok1 end
-    assert :ok == WorkerPool.run pool, fn -> do_ok_job() end, if_ok: fn -> send me, :ok2 end
+    assert :ok == WorkerPool.run pool, fn -> do_ok_job() end, on_ok: fn -> send me, :ok1 end
+    assert :ok == WorkerPool.run pool, fn -> do_ok_job() end, on_ok: fn -> send me, :ok2 end
     assert :error == WorkerPool.run pool, fn -> do_ok_job() end
 
     assert_receive :ok1, 2_000
     assert_receive :ok2, 2_000
 
-    assert :ok == WorkerPool.run pool, fn -> do_ok_job() end, if_ok: fn -> send me, :ok3 end
+    assert :ok == WorkerPool.run pool, fn -> do_ok_job() end, on_ok: fn -> send me, :ok3 end
     assert_receive :ok3, 2_000
   end
 
@@ -134,7 +134,7 @@ defmodule WorkerPoolTest do
     me = self()
 
     for i <- 1..1_000 do
-      WorkerPool.run pool, fn -> do_ok_job(2_000) end, if_ok: fn -> send me, i end
+      WorkerPool.run pool, fn -> do_ok_job(2_000) end, on_ok: fn -> send me, i end
     end
 
     assert 1_000 == WorkerPool.current_processes(pool)
@@ -168,7 +168,7 @@ defmodule WorkerPoolTest do
 
     me = self()
 
-    WorkerPool.run pool, fn -> :timer.sleep(3_000) end, timeout: 100, if_timeout: fn -> send me, :job_timeout end
+    WorkerPool.run pool, fn -> :timer.sleep(3_000) end, timeout: 100, on_timeout: fn -> send me, :job_timeout end
     assert_receive :job_timeout, 2_000
   end
 

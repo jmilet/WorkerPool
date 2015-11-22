@@ -93,9 +93,9 @@ defmodule WorkerPool do
     # Runs the ok callback.
     if opts != nil do
       case reason do
-        :normal -> if opts[:if_ok], do: opts[:if_ok].()
-        :timeout -> if opts[:if_timeout], do: opts[:if_timeout].()
-        error -> if opts[:if_error], do: opts[:if_error].(error)
+        :normal -> if opts[:on_ok], do: opts[:on_ok].()
+        :timeout -> if opts[:on_timeout], do: opts[:on_timeout].()
+        error -> if opts[:on_error], do: opts[:on_error].(error)
       end
     end
 
